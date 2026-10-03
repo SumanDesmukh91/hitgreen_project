@@ -545,7 +545,7 @@ elif menu == "Maintenance":
     if st.session_state.role in [
         "Admin",
         "Committee"
-    \]:
+    ]:
 
         with st.expander(
             "➕ Add Maintenance Payment"
