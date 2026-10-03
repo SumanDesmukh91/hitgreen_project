@@ -646,7 +646,7 @@ elif menu == "Maintenance":
         "📋 Maintenance Records"
     )
 
-    maintenance = ead_csv(
+    maintenance = read_csv(
         MAINT_FILE
     )
 
