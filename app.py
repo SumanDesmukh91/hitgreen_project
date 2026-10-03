@@ -289,28 +289,46 @@ elif menu == "Residents":
 
     st.title("👨 Resident Directory")
 
+    # ------------------------------------------
+    # Add Resident
+    # ------------------------------------------
+
     if st.session_state.role in [
         "Admin",
         "Committee"
-    ]:
+    \]:
 
         with st.expander("➕ Add Resident"):
 
-            flat = st.text_input(
-                "Flat Number"
-            )
+            col1, col2 = st.columns(2)
 
-            owner = st.text_input(
-                "Owner Name"
-            )
+            with col1:
 
-            mobile = st.text_input(
-                "Mobile"
-            )
+                flat = st.text_input(
+                    "Flat Number"
+                )
 
-            email = st.text_input(
-                "Email"
-            )
+                owner = st.text_input(
+                    "Owner Name"
+                )
+
+                tenant = st.text_input(
+                    "Tenant Name"
+                )
+
+            with col2:
+
+                garage = st.text_input(
+                    "Garage Number"
+                )
+
+                mobile = st.text_input(
+                    "Mobile"
+                )
+
+                email = st.text_input(
+                    "Email"
+                )
 
             if st.button(
                 "Save Resident"
@@ -321,6 +339,8 @@ elif menu == "Residents":
                     [
                         flat,
                         owner,
+                        tenant,
+                        garage,
                         mobile,
                         email
                     ]
@@ -332,18 +352,24 @@ elif menu == "Residents":
 
                 st.rerun()
 
+    # ------------------------------------------
+    # Display Residents
+    # ------------------------------------------
+
     residents = read_csv(
         RESIDENTS_FILE
     )
 
     if residents:
 
-        df = pd.DataFrame(
-            residents
+        df = pd.DataFrame(residents)
+
+        st.subheader(
+            "Resident Directory"
         )
 
         search = st.text_input(
-            "🔍 Search Resident"
+            "🔍 Search Flat / Owner / Tenant"
         )
 
         if search:
@@ -362,9 +388,74 @@ elif menu == "Residents":
             ]
 
         st.dataframe(
-            df,
+           df,
             use_container_width=True,
-            hide_index=True
+            hide_index=True,
+            column_config={
+                "FlatNo": "🏠 Flat No",
+                "OwnerName": "👤 Owner Name",
+                "TenantName": "👨‍👩‍👧 Tenant Name",
+                "GarageNo": "🚗 Garage No",
+                "Mobile": "📱 Mobile",
+                "Email": "📧 Email"
+            }
+        )
+
+        # --------------------------------------
+        # Delete Resident
+        # --------------------------------------
+
+        if st.session_state.role == "Admin":
+
+            st.divider()
+
+            st.subheader(
+                "🗑 Delete Resident"
+            )
+
+            flat_to_delete = st.selectbox(
+                "Select Flat",
+                df["FlatNo"].tolist()
+            )
+
+            if st.button(
+                "Delete Resident"
+            ):
+
+                all_rows = read_csv(
+                    RESIDENTS_FILE
+                )
+
+                all_rows = [
+                    row
+                    for row in all_rows
+                    if row["FlatNo"]
+                    != flat_to_delete
+                ]
+
+                save_csv(
+                    RESIDENTS_FILE,
+                    all_rows,
+                    [
+                        "FlatNo",
+                        "OwnerName",
+                        "TenantName",
+                        "GarageNo",
+                        "Mobile",
+                        "Email"
+                    ]
+                )
+
+                st.success(
+                    f"{flat_to_delete} deleted successfully"
+                )
+
+                st.rerun()
+
+    else:
+
+        st.info(
+            "No residents found."
         )
 
         # ==========================================
