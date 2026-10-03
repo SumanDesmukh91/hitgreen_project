@@ -1,10 +1,11 @@
 import streamlit as st
+import pandas as pd
 import csv
 import os
-import pandas as pd
-# ==========================================
-# CONFIG
-# ==========================================
+
+# ==================================================
+# PAGE CONFIG
+# ==================================================
 
 st.set_page_config(
     page_title="HIT Green Housing",
@@ -12,19 +13,41 @@ st.set_page_config(
     layout="wide"
 )
 
+# ==================================================
+# CUSTOM CSS
+# ==================================================
+
+st.markdown("""
+<style>
+
+div[data-testid="stMetric"]{
+    background:white;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0px 2px 8px rgba(0,0,0,0.1);
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# ==================================================
+# PATHS
+# ==================================================
+
 DATA_DIR = "data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
 USERS_FILE = os.path.join(DATA_DIR, "users.csv")
 RESIDENTS_FILE = os.path.join(DATA_DIR, "residents.csv")
 
-# ==========================================
+# ==================================================
 # CREATE FILES
-# ==========================================
+# ==================================================
 
 def create_file(file_name, headers):
 
     if not os.path.exists(file_name):
+
         with open(
             file_name,
             "w",
@@ -34,7 +57,6 @@ def create_file(file_name, headers):
 
             writer = csv.writer(f)
             writer.writerow(headers)
-
 
 create_file(
     USERS_FILE,
@@ -63,6 +85,7 @@ with open(
     "r",
     encoding="utf-8"
 ) as f:
+
     rows = list(csv.reader(f))
 
 if len(rows) == 1:
@@ -83,9 +106,9 @@ if len(rows) == 1:
             ]
         )
 
-# ==========================================
+# ==================================================
 # HELPERS
-# ==========================================
+# ==================================================
 
 def read_csv(file_name):
 
@@ -117,10 +140,11 @@ def append_csv(file_name, row):
         encoding="utf-8"
     ) as f:
 
-        csv.writer(f).writerow(row)
+        writer = csv.writer(f)
+        writer.writerow(row)
 
 
-def save_csv(file_name, data, headers):
+def save_csv(file_name, rows, headers):
 
     with open(
         file_name,
@@ -135,11 +159,11 @@ def save_csv(file_name, data, headers):
         )
 
         writer.writeheader()
-        writer.writerows(data)
+        writer.writerows(rows)
 
-# ==========================================
+# ==================================================
 # SESSION
-# ==========================================
+# ==================================================
 
 if "logged_in" not in st.session_state:
 
@@ -148,15 +172,17 @@ if "logged_in" not in st.session_state:
     st.session_state.role = ""
     st.session_state.flatno = ""
 
-# ==========================================
+# ==================================================
 # LOGIN
-# ==========================================
+# ==================================================
 
 if not st.session_state.logged_in:
 
     st.title("🏢 HIT Green Housing")
 
-    username = st.text_input("Username")
+    username = st.text_input(
+        "Username"
+    )
 
     password = st.text_input(
         "Password",
@@ -165,9 +191,9 @@ if not st.session_state.logged_in:
 
     if st.button("Login"):
 
-        users = read_csv(USERS_FILE)
-
-        valid = False
+        users = read_csv(
+            USERS_FILE
+        )
 
         for user in users:
 
@@ -181,18 +207,15 @@ if not st.session_state.logged_in:
                 st.session_state.role = user["role"]
                 st.session_state.flatno = user["flatno"]
 
-                valid = True
-
                 st.rerun()
 
-        if not valid:
-            st.error("Invalid Credentials")
+        st.error("Invalid Credentials")
 
     st.stop()
 
-# ==========================================
+# ==================================================
 # SIDEBAR
-# ==========================================
+# ==================================================
 
 st.sidebar.title("🏢 HIT Green Housing")
 
@@ -221,9 +244,9 @@ if st.sidebar.button("Logout"):
 
     st.rerun()
 
-# ==========================================
+# ==================================================
 # DASHBOARD
-# ==========================================
+# ==================================================
 
 if menu == "Dashboard":
 
@@ -258,22 +281,20 @@ if menu == "Dashboard":
         f"Logged in as {st.session_state.username} ({st.session_state.role})"
     )
 
-# ==========================================
+# ==================================================
 # RESIDENTS
-# ==========================================
+# ==================================================
 
 elif menu == "Residents":
 
-    st.title("👨 Residents")
+    st.title("👨 Resident Directory")
 
     if st.session_state.role in [
         "Admin",
         "Committee"
     ]:
 
-        with st.expander(
-            "Add Resident"
-        ):
+        with st.expander("➕ Add Resident"):
 
             flat = st.text_input(
                 "Flat Number"
@@ -306,7 +327,7 @@ elif menu == "Residents":
                 )
 
                 st.success(
-                    "Resident Added"
+                    "Resident Added Successfully"
                 )
 
                 st.rerun()
@@ -315,53 +336,89 @@ elif menu == "Residents":
         RESIDENTS_FILE
     )
 
-st.subheader("👨 Resident Directory")
-residents = read_csv(RESIDENTS_FILE)
-df = pd.DataFrame(residents)
-st.dataframe(
-    df,
-    use_container_width=True,
-    hide_index=True
-)
+    if residents:
 
-    if (
-                st.session_state.role
-                == "Admin"
+        df = pd.DataFrame(
+            residents
+        )
+
+        search = st.text_input(
+            "🔍 Search Resident"
+        )
+
+        if search:
+
+            df = df[
+                df.astype(str)
+                  .apply(
+                      lambda row:
+                      row.str.contains(
+                          search,
+                          case=False,
+                          na=False
+                      )
+                  )
+                  .any(axis=1)
+            ]
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        # ==========================================
+        # DELETE
+        # ==========================================
+
+        if (
+            st.session_state.role
+            == "Admin"
+        ):
+
+            st.subheader(
+                "🗑 Delete Resident"
+            )
+
+            flat_to_delete = st.selectbox(
+                "Select Flat",
+                df["FlatNo"].tolist()
+            )
+
+            if st.button(
+                "Delete Resident"
             ):
 
-                with c3:
+                all_rows = read_csv(
+                    RESIDENTS_FILE
+                )
 
-                    if st.button(
-                        "Delete",
-                        key=row["FlatNo"]
-                    ):
+                all_rows = [
+                    row
+                    for row in all_rows
+                    if row["FlatNo"]
+                    != flat_to_delete
+                ]
 
-                        all_rows = read_csv(
-                            RESIDENTS_FILE
-                        )
+                save_csv(
+                    RESIDENTS_FILE,
+                    all_rows,
+                    [
+                        "FlatNo",
+                        "OwnerName",
+                        "Mobile",
+                        "Email"
+                    ]
+                )
 
-                        all_rows = [
-                            x
-                            for x in all_rows
-                            if x["FlatNo"]
-                            != row["FlatNo"]
-                        ]
+                st.success(
+                    f"{flat_to_delete} deleted successfully"
+                )
 
-                        save_csv(
-                            RESIDENTS_FILE,
-                            all_rows,
-                            [
-                                "FlatNo",
-                                "OwnerName",
-                                "Mobile",
-                                "Email"
-                            ]
-                        )
+                st.rerun()
 
-                        st.success(
-                            "Deleted"
-                        )
+    else:
 
-                        st.rerun()
-
-    st.divider()
+        st.info(
+            "No residents found."
+        )
