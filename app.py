@@ -238,7 +238,8 @@ menu = st.sidebar.selectbox(
     [
         "Dashboard",
         "Residents",
-        "Maintenance"
+        "Maintenance",
+        "Defaulters Report"
     ]
 )
 
@@ -696,4 +697,145 @@ elif menu == "Maintenance":
 
         st.info(
             "No maintenance records found."
+        )
+# ==================================================
+# DEFAULTERS REPORT
+# ==================================================
+
+elif menu == "Defaulters Report":
+
+    st.title("⚠️ Defaulters Report")
+
+    MONTHLY_MAINTENANCE = 1200
+
+    residents = read_csv(RESIDENTS_FILE)
+    maintenance = read_csv(MAINT_FILE)
+
+    current_month = pd.Timestamp.now().month
+    current_year = pd.Timestamp.now().year
+
+    months_to_check = []
+
+    # Last 2 months only
+
+    for i in range(1, 3):
+
+        month_num = current_month - i
+        year_num = current_year
+
+        if month_num <= 0:
+            month_num += 12
+            year_num -= 1
+
+        month_name = pd.Timestamp(
+            year=year_num,
+            month=month_num,
+            day=1
+        ).strftime("%B")
+
+        months_to_check.append(
+            (
+                month_name,
+                str(year_num)
+            )
+        )
+
+    defaulters = []
+
+    for resident in residents:
+
+        flat = resident["FlatNo"]
+
+        due_months = []
+
+        for month_name, year_name in months_to_check:
+
+            payment_found = any(
+
+                rec["FlatNo"] == flat and
+                rec["Month"] == month_name and
+                str(rec["Year"]) == year_name and
+                rec["Status"] == "Paid"
+
+                for rec in maintenance
+
+            )
+
+            if not payment_found:
+
+                due_months.append(
+                    f"{month_name}-{year_name}"
+                )
+
+        if due_months:
+
+            due_amount = (
+                len(due_months)
+                * MONTHLY_MAINTENANCE
+            )
+
+            defaulters.append(
+                {
+                    "FlatNo": flat,
+                    "OwnerName": resident["OwnerName"],
+                    "Due Months": ", ".join(
+                        due_months
+                    ),
+                    "Due Count": len(
+                        due_months
+                    ),
+                    "Due Amount": due_amount
+                }
+            )
+
+    if defaulters:
+
+        df = pd.DataFrame(
+            defaulters
+        )
+
+        total_due = (
+            df["Due Amount"]
+            .sum()
+        )
+
+        total_defaulters = len(df)
+
+        c1, c2 = st.columns(2)
+
+        c1.metric(
+            "Defaulter Flats",
+            total_defaulters
+        )
+
+        c2.metric(
+            "Total Outstanding",
+            f"₹ {total_due:,.0f}"
+        )
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        if st.button(
+            "Download Defaulters CSV"
+        ):
+
+            csv_data = df.to_csv(
+                index=False
+            )
+
+            st.download_button(
+                label="Download Report",
+                data=csv_data,
+                file_name="defaulters_report.csv",
+                mime="text/csv"
+            )
+
+    else:
+
+        st.success(
+            "✅ No Defaulters Found"
         )
