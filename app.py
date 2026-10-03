@@ -174,7 +174,7 @@ def show_residents():
         if CURRENT_USER['role'] in [
             'Admin',
             'Committee'
-        \]:
+        ]:
 
             flat = ui.input(
                 'Flat Number'
