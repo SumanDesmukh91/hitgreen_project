@@ -1,7 +1,7 @@
 import streamlit as st
 import csv
 import os
-
+import pandas as pd
 # ==========================================
 # CONFIG
 # ==========================================
@@ -315,35 +315,14 @@ elif menu == "Residents":
         RESIDENTS_FILE
     )
 
-html = """
-<table style='width:100%; border-collapse:collapse;'>
-
-<tr style='background-color:#1f77b4;color:white;'>
-
-<th style='padding:10px;border:1px solid #ddd;'>Flat No</th>
-<th style='padding:10px;border:1px solid #ddd;'>Owner Name</th>
-<th style='padding:10px;border:1px solid #ddd;'>Mobile</th>
-<th style='padding:10px;border:1px solid #ddd;'>Email</th>
-
-</tr>
-"""
-
-for row in residents:
-
-    html += f"""
-    <tr>
-
-    <td style='padding:8px;border:1px solid #ddd;'>{row['FlatNo']}</td>
-    <td style='padding:8px;border:1px solid #ddd;'>{row['OwnerName']}</td>
-    <td style='padding:8px;border:1px solid #ddd;'>{row['Mobile']}</td>
-    <td style='padding:8px;border:1px solid #ddd;'>{row['Email']}</td>
-
-    </tr>
-    """
-
-    html += "</table>"
-
-    st.markdown(html, unsafe_allow_html=True)
+st.subheader("👨 Resident Directory")
+residents = read_csv(RESIDENTS_FILE)
+df = pd.DataFrame(residents)
+st.dataframe(
+    df,
+    use_container_width=True,
+    hide_index=True
+)
 
     if (
                 st.session_state.role
