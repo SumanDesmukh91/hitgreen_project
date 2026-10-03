@@ -341,11 +341,11 @@ for row in residents:
     </tr>
     """
 
-html += "</table>"
+    html += "</table>"
 
-st.markdown(html, unsafe_allow_html=True)
+    st.markdown(html, unsafe_allow_html=True)
 
-            if (
+    if (
                 st.session_state.role
                 == "Admin"
             ):
@@ -385,4 +385,4 @@ st.markdown(html, unsafe_allow_html=True)
 
                         st.rerun()
 
-            st.divider()
+    st.divider()
