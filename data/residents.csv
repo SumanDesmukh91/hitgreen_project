@@ -1,3 +1,4 @@
-FlatNo,OwnerName,Mobile,Email
-C304,Suman Deshmukh,9007148218,sumandesmukh91@gmail.com
-C301,Anup Ghosh,9007148218,anup.ghosh@gmail.com
+FlatNo,OwnerName,TenantName,GarageNo,Mobile,Email
+A101,Suman Deshmukh,,G01,9876543210,suman@gmail.com
+A102,Debmalya Mukherjee,,G02,9876543211,deb@gmail.com
+A103,Madhukar Tippani,Rahul Sharma,G03,9876543212,madhukar@gmail.com
