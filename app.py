@@ -507,9 +507,3 @@ elif menu == "Residents":
                 )
 
                 st.rerun()
-
-    else:
-
-        st.info(
-            "No residents found."
-        )
