@@ -9,8 +9,8 @@ import os
 DATA_DIR = "data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
-USERS_FILE = f"{DATA_DIR}/users.csv"
-RESIDENTS_FILE = f"{DATA_DIR}/residents.csv"
+USERS_FILE = "users.csv"
+RESIDENTS_FILE = "residents.csv"
 
 # =====================================================
 # CREATE FILES
@@ -414,17 +414,9 @@ def login_page():
 # MAIN UI
 # =====================================================
 
-def build_ui():
-
-    ui.navigate.to("/")
-
-@ui.page("/")
-def home():
-
-    ui.clear()
+def build_main_page():
 
     if CURRENT_USER["role"] == "":
-
         login_page()
         return
 
@@ -452,7 +444,7 @@ def home():
             CURRENT_USER["role"] = ""
             CURRENT_USER["flatno"] = ""
 
-            ui.navigate.to("/")
+            ui.navigate.reload()
 
         ui.button(
             "Logout",
@@ -460,13 +452,15 @@ def home():
             on_click=logout
         )
 
-    content.clear()
+    global content
+    content = ui.column().classes("w-full")
 
     show_dashboard()
 
 # =====================================================
 # START
 # =====================================================
+build_main_page()
 
 ui.run(
     title="HIT Green Housing",
