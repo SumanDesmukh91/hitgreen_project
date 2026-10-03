@@ -915,11 +915,11 @@ elif menu == "Defaulters Report":
 
         st.dataframe(
             df,
-            use_container_width=True,
-            hide_index=True
+            use_container_width=True
         )
 
 		pdf_buffer = generate_defaulters_pdf(df)
+
 		st.download_button(
 			label="📄 Download PDF Report",
 			data=pdf_buffer,
