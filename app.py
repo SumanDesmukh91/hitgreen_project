@@ -1,5 +1,8 @@
 from nicegui import ui
 
 ui.label('🏢 HIT Green Housing')
-
-ui.run()
+if __name__ in {"__main__", "__mp_main__"}:
+    ui.run(
+        title="HIT Green Housing",
+        reload=False
+    )
