@@ -315,7 +315,7 @@ elif menu == "Residents":
         RESIDENTS_FILE
     )
 
-    html = """
+html = """
 <table style='width:100%; border-collapse:collapse;'>
 
 <tr style='background-color:#1f77b4;color:white;'>
