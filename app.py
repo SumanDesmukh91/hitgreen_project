@@ -315,33 +315,35 @@ elif menu == "Residents":
         RESIDENTS_FILE
     )
 
-    for row in residents:
+    html = """
+<table style='width:100%; border-collapse:collapse;'>
 
-        with st.container():
+<tr style='background-color:#1f77b4;color:white;'>
 
-            c1, c2, c3 = st.columns(
-                [4, 4, 1]
-            )
+<th style='padding:10px;border:1px solid #ddd;'>Flat No</th>
+<th style='padding:10px;border:1px solid #ddd;'>Owner Name</th>
+<th style='padding:10px;border:1px solid #ddd;'>Mobile</th>
+<th style='padding:10px;border:1px solid #ddd;'>Email</th>
 
-            with c1:
+</tr>
+"""
 
-                st.write(
-                    f"🏠 {row['FlatNo']}"
-                )
+for row in residents:
 
-                st.write(
-                    row["OwnerName"]
-                )
+    html += f"""
+    <tr>
 
-            with c2:
+    <td style='padding:8px;border:1px solid #ddd;'>{row['FlatNo']}</td>
+    <td style='padding:8px;border:1px solid #ddd;'>{row['OwnerName']}</td>
+    <td style='padding:8px;border:1px solid #ddd;'>{row['Mobile']}</td>
+    <td style='padding:8px;border:1px solid #ddd;'>{row['Email']}</td>
 
-                st.write(
-                    row["Mobile"]
-                )
+    </tr>
+    """
 
-                st.write(
-                    row["Email"]
-                )
+html += "</table>"
+
+st.markdown(html, unsafe_allow_html=True)
 
             if (
                 st.session_state.role
