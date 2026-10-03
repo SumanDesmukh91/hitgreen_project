@@ -39,6 +39,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 USERS_FILE = os.path.join(DATA_DIR, "users.csv")
 RESIDENTS_FILE = os.path.join(DATA_DIR, "residents.csv")
+MAINT_FILE = os.path.join(DATA_DIR, "maintenance.csv")
 
 # ==================================================
 # CREATE FILES
@@ -65,6 +66,19 @@ create_file(
         "password",
         "role",
         "flatno"
+    ]
+)
+
+create_file(
+    MAINT_FILE,
+    [
+        "FlatNo",
+        "Month",
+        "Year",
+        "AmountPaid",
+        "VoucherNo",
+        "PaymentDate",
+        "Status"
     ]
 )
 
@@ -223,7 +237,8 @@ menu = st.sidebar.selectbox(
     "Menu",
     [
         "Dashboard",
-        "Residents"
+        "Residents",
+        "Maintenance"
     ]
 )
 
@@ -260,23 +275,35 @@ if menu == "Dashboard":
 
     st.title("📊 Dashboard")
 
-    c1, c2, c3 = st.columns(3)
+    maintenance = read_csv(MAINT_FILE)
 
-    c1.metric(
-        "Total Flats",
-        total_flats
+    collection = sum(
+    float(x["AmountPaid"] or 0)
+    for x in maintenance
     )
 
+    c1, c2, c3, c4 = st.columns(4)
+
+    c1.metric(
+    "Total Flats",
+    total_flats
+    )
+    
     c2.metric(
         "Occupied",
         occupied
     )
-
+    
     c3.metric(
         "Vacant",
         vacant
     )
-
+    
+    c4.metric(
+        "Collection",
+        f"₹ {collection:,.0f}"
+    )
+    
     st.info(
         f"Logged in as {st.session_state.username} ({st.session_state.role})"
     )
@@ -507,3 +534,166 @@ elif menu == "Residents":
                 )
 
                 st.rerun()
+# ==================================================
+# MAINTENANCE
+# ==================================================
+
+elif menu == "Maintenance":
+
+    st.title("💰 Maintenance Management")
+
+    if st.session_state.role in [
+        "Admin",
+        "Committee"
+    \]:
+
+        with st.expander(
+            "➕ Add Maintenance Payment"
+        ):
+
+            residents = read_csv(
+                RESIDENTS_FILE
+            )
+
+            flat_list = sorted(
+                [
+                    x["FlatNo"]
+                    for x in residents
+                ]
+            )
+
+            flat = st.selectbox(
+                "Flat Number",
+                flat_list
+                if flat_list
+                else ["No Flats"]
+            )
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+
+                month = st.selectbox(
+                    "Month",
+                    [
+                        "January",
+                        "February",
+                        "March",
+                        "April",
+                        "May",
+                        "June",
+                        "July",
+                        "August",
+                        "September",
+                        "October",
+                        "November",
+                        "December"
+                    ]
+                )
+
+            with col2:
+
+                year = st.number_input(
+                    "Year",
+                    value=2026,
+                    step=1
+                )
+
+            amount = st.number_input(
+                "Amount Paid",
+                min_value=0.0,
+                value=1200.0
+            )
+
+            voucher = st.text_input(
+                "Voucher Number"
+            )
+
+            status = st.selectbox(
+                "Status",
+                [
+                    "Paid",
+                    "Pending"
+                ]
+            )
+
+            if st.button(
+                "Save Maintenance"
+            ):
+
+                append_csv(
+                    MAINT_FILE,
+                    [
+                        flat,
+                        month,
+                        year,
+                        amount,
+                        voucher,
+                        pd.Timestamp.now().strftime(
+                            "%d-%m-%Y"
+                        ),
+                        status
+                    ]
+                )
+
+                st.success(
+                    "Maintenance Saved Successfully"
+                )
+
+                st.rerun()
+
+    st.subheader(
+        "📋 Maintenance Records"
+    )
+
+    maintenance = ead_csv(
+        MAINT_FILE
+    )
+
+    if maintenance:
+
+        df = pd.DataFrame(
+            maintenance
+        )
+
+        search = st.text_input(
+            "🔍 Search Flat"
+        )
+
+        if search:
+
+            df = df[
+                df["FlatNo"]
+                .astype(str)
+                .str.contains(
+                    search,
+                    case=False,
+                    na=False
+                )
+            ]
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        total_collection = (
+            pd.to_numeric(
+                df["AmountPaid"],
+                errors="coerce"
+            )
+            .fillna(0)
+            .sum()
+        )
+
+        st.metric(
+            "Total Collection",
+            f"₹ {total_collection:,.0f}"
+        )
+
+    else:
+
+        st.info(
+            "No maintenance records found."
+        )
