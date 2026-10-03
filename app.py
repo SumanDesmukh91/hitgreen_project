@@ -2,6 +2,16 @@ import streamlit as st
 import pandas as pd
 import csv
 import os
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer
+)
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from io import BytesIO
 
 # ==================================================
 # PAGE CONFIG
@@ -232,7 +242,53 @@ if not st.session_state.logged_in:
 # ==================================================
 
 st.sidebar.title("🏢 HIT Green Housing")
+def generate_defaulters_pdf(df):
 
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer)
+
+    styles = getSampleStyleSheet()
+
+    elements = []
+
+    elements.append(
+        Paragraph(
+            "HIT Green Housing - Defaulters Report",
+            styles["Title"]
+        )
+    )
+
+    elements.append(Spacer(1, 12))
+
+    table_data = [list(df.columns)]
+
+    for _, row in df.iterrows():
+
+        table_data.append(
+            list(row)
+        )
+
+    table = Table(table_data)
+
+    table.setStyle(
+        TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.darkblue),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('GRID', (0,0), (-1,-1), 1, colors.black),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('BACKGROUND', (0,1), (-1,-1), colors.whitesmoke)
+        ])
+    )
+
+    elements.append(table)
+
+    doc.build(elements)
+
+    buffer.seek(0)
+
+    return buffer
+    
 menu = st.sidebar.selectbox(
     "Menu",
     [
@@ -698,6 +754,7 @@ elif menu == "Maintenance":
         st.info(
             "No maintenance records found."
         )
+
 # ==================================================
 # DEFAULTERS REPORT
 # ==================================================
@@ -711,34 +768,28 @@ elif menu == "Defaulters Report":
     residents = read_csv(RESIDENTS_FILE)
     maintenance = read_csv(MAINT_FILE)
 
+    MONTH_MAP = {
+        "January": 1,
+        "February": 2,
+        "March": 3,
+        "April": 4,
+        "May": 5,
+        "June": 6,
+        "July": 7,
+        "August": 8,
+        "September": 9,
+        "October": 10,
+        "November": 11,
+        "December": 12
+    }
+
     current_month = pd.Timestamp.now().month
     current_year = pd.Timestamp.now().year
 
-    months_to_check = []
-
-    # Last 2 months only
-
-    for i in range(1, 3):
-
-        month_num = current_month - i
-        year_num = current_year
-
-        if month_num <= 0:
-            month_num += 12
-            year_num -= 1
-
-        month_name = pd.Timestamp(
-            year=year_num,
-            month=month_num,
-            day=1
-        ).strftime("%B")
-
-        months_to_check.append(
-            (
-                month_name,
-                str(year_num)
-            )
-        )
+    current_index = (
+        current_year * 12
+        + current_month
+    )
 
     defaulters = []
 
@@ -746,31 +797,69 @@ elif menu == "Defaulters Report":
 
         flat = resident["FlatNo"]
 
-        due_months = []
+        flat_payments = [
 
-        for month_name, year_name in months_to_check:
+            record
 
-            payment_found = any(
+            for record in maintenance
 
-                rec["FlatNo"] == flat and
-                rec["Month"] == month_name and
-                str(rec["Year"]) == year_name and
-                rec["Status"] == "Paid"
-
-                for rec in maintenance
-
+            if (
+                record["FlatNo"] == flat
+                and record["Status"] == "Paid"
             )
 
-            if not payment_found:
+        ]
 
-                due_months.append(
-                    f"{month_name}-{year_name}"
+        # No payment record found
+
+        if not flat_payments:
+
+            defaulters.append(
+                {
+                    "FlatNo": flat,
+                    "OwnerName": resident["OwnerName"],
+                    "Last Paid": "Never",
+                    "Months Due": "All",
+                    "Due Amount": "N/A"
+                }
+            )
+
+            continue
+
+        # Latest paid month
+
+        latest_payment = max(
+
+            flat_payments,
+
+            key=lambda x: (
+                int(x["Year"]),
+                MONTH_MAP.get(
+                    x["Month"],
+                    0
                 )
+            )
 
-        if due_months:
+        )
+
+        paid_index = (
+            int(latest_payment["Year"]) * 12
+            + MONTH_MAP[
+                latest_payment["Month"]
+            ]
+        )
+
+        months_due = (
+            current_index
+            - paid_index
+        )
+
+        # More than 2 months overdue
+
+        if months_due > 2:
 
             due_amount = (
-                len(due_months)
+                months_due
                 * MONTHLY_MAINTENANCE
             )
 
@@ -778,39 +867,37 @@ elif menu == "Defaulters Report":
                 {
                     "FlatNo": flat,
                     "OwnerName": resident["OwnerName"],
-                    "Due Months": ", ".join(
-                        due_months
-                    ),
-                    "Due Count": len(
-                        due_months
-                    ),
+                    "Last Paid":
+                        f"{latest_payment['Month']} "
+                        f"{latest_payment['Year']}",
+                    "Months Due": months_due,
                     "Due Amount": due_amount
                 }
             )
 
+    # ======================================
+    # DISPLAY REPORT
+    # ======================================
+
     if defaulters:
 
-        df = pd.DataFrame(
-            defaulters
-        )
-
-        total_due = (
-            df["Due Amount"]
-            .sum()
-        )
-
-        total_defaulters = len(df)
+        df = pd.DataFrame(defaulters)
 
         c1, c2 = st.columns(2)
 
         c1.metric(
             "Defaulter Flats",
-            total_defaulters
+            len(df)
         )
+
+        numeric_due = pd.to_numeric(
+            df["Due Amount"],
+            errors="coerce"
+        ).fillna(0)
 
         c2.metric(
             "Total Outstanding",
-            f"₹ {total_due:,.0f}"
+            f"₹ {numeric_due.sum():,.0f}"
         )
 
         st.dataframe(
@@ -819,20 +906,14 @@ elif menu == "Defaulters Report":
             hide_index=True
         )
 
-        if st.button(
-            "Download Defaulters CSV"
-        ):
+		pdf_buffer = generate_defaulters_pdf(df)
 
-            csv_data = df.to_csv(
-                index=False
-            )
-
-            st.download_button(
-                label="Download Report",
-                data=csv_data,
-                file_name="defaulters_report.csv",
-                mime="text/csv"
-            )
+		st.download_button(
+			label="📄 Download PDF Report",
+			data=pdf_buffer,
+			file_name="defaulters_report.pdf",
+			mime="application/pdf"
+		)
 
     else:
 
