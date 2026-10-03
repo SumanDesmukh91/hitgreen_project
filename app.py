@@ -907,7 +907,6 @@ elif menu == "Defaulters Report":
         )
 
 		pdf_buffer = generate_defaulters_pdf(df)
-
 		st.download_button(
 			label="📄 Download PDF Report",
 			data=pdf_buffer,
