@@ -912,20 +912,22 @@ elif menu == "Defaulters Report":
             "Total Outstanding",
             f"₹ {numeric_due.sum():,.0f}"
         )
-
+		
         st.dataframe(
             df,
-            use_container_width=True
+            use_container_width=True,
+            hide_index=True
         )
 
-		pdf_buffer = generate_defaulters_pdf(df)
+        pdf_buffer = generate_defaulters_pdf(df)
 
-		st.download_button(
-			label="📄 Download PDF Report",
-			data=pdf_buffer,
-			file_name="defaulters_report.pdf",
-			mime="application/pdf"
-		)
+        st.download_button(
+            label="📄 Download PDF Report",
+            data=pdf_buffer.getvalue(),
+            file_name="defaulters_report.pdf",
+            mime="application/pdf"
+        )
+
 
     else:
 
