@@ -133,7 +133,67 @@ if len(rows) == 1:
 # ==================================================
 # HELPERS
 # ==================================================
+# ==========================================
+# PDF HELPERS
+# ==========================================
 
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer
+)
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from io import BytesIO
+
+def generate_defaulters_pdf(df):
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer)
+
+    styles = getSampleStyleSheet()
+
+    elements = []
+
+    elements.append(
+        Paragraph(
+            "HIT Green Housing - Defaulters Report",
+            styles["Title"]
+        )
+    )
+
+    elements.append(Spacer(1, 12))
+
+    table_data = [list(df.columns)]
+
+    for _, row in df.iterrows():
+        table_data.append(
+            [str(x) for x in row.tolist()]
+        )
+
+    table = Table(table_data)
+
+    table.setStyle(
+        TableStyle([
+            ("BACKGROUND",(0,0),(-1,0),colors.darkblue),
+            ("TEXTCOLOR",(0,0),(-1,0),colors.white),
+            ("GRID",(0,0),(-1,-1),1,colors.black),
+            ("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),
+            ("BACKGROUND",(0,1),(-1,-1),colors.whitesmoke)
+        ])
+    )
+
+    elements.append(table)
+
+    doc.build(elements)
+
+    buffer.seek(0)
+
+    return buffer
+	
 def read_csv(file_name):
 
     if not os.path.exists(file_name):
@@ -242,53 +302,6 @@ if not st.session_state.logged_in:
 # ==================================================
 
 st.sidebar.title("🏢 HIT Green Housing")
-def generate_defaulters_pdf(df):
-
-    buffer = BytesIO()
-
-    doc = SimpleDocTemplate(buffer)
-
-    styles = getSampleStyleSheet()
-
-    elements = []
-
-    elements.append(
-        Paragraph(
-            "HIT Green Housing - Defaulters Report",
-            styles["Title"]
-        )
-    )
-
-    elements.append(Spacer(1, 12))
-
-    table_data = [list(df.columns)]
-
-    for _, row in df.iterrows():
-
-        table_data.append(
-            list(row)
-        )
-
-    table = Table(table_data)
-
-    table.setStyle(
-        TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.darkblue),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-            ('GRID', (0,0), (-1,-1), 1, colors.black),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('BACKGROUND', (0,1), (-1,-1), colors.whitesmoke)
-        ])
-    )
-
-    elements.append(table)
-
-    doc.build(elements)
-
-    buffer.seek(0)
-
-    return buffer
-    
 menu = st.sidebar.selectbox(
     "Menu",
     [
