@@ -315,15 +315,6 @@ elif menu == "Residents":
         RESIDENTS_FILE
     )
 
-    if st.session_state.role == "Resident":
-
-        residents = [
-            r
-            for r in residents
-            if r["FlatNo"]
-            == st.session_state.flatno
-        ]
-
     for row in residents:
 
         with st.container():
