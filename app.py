@@ -136,6 +136,8 @@ if len(rows) == 1:
 # ==========================================
 # PDF HELPERS
 # ==========================================
+from xhtml2pdf import pisa
+from io import BytesIO
 def html_to_pdf(html_content):
 
     pdf_buffer = BytesIO()
