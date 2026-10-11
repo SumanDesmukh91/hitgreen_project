@@ -136,7 +136,109 @@ if len(rows) == 1:
 # ==========================================
 # PDF HELPERS
 # ==========================================
+from io import BytesIO
+from weasyprint import HTML
 
+def load_receipt_template():
+
+    with open(
+        "templates/maintenance_receipt.html",
+        "r",
+        encoding="utf-8"
+    ) as f:
+
+        return f.read()
+def build_receipt_html(record):
+
+    residents = read_csv(
+        RESIDENTS_FILE
+    )
+
+    resident = next(
+
+        (
+            r
+            for r in residents
+            if r["FlatNo"]
+            == record["FlatNo"]
+        ),
+
+        {}
+
+    )
+
+    html = load_receipt_template()
+
+    replacements = {
+
+        "{{receipt_no}}":
+            record["VoucherNo"],
+
+        "{{flat_no}}":
+            record["FlatNo"],
+
+        "{{owner_name}}":
+            resident.get(
+                "OwnerName",
+                ""
+            ),
+
+        "{{tenant_name}}":
+            resident.get(
+                "TenantName",
+                ""
+            ),
+
+        "{{garage_no}}":
+            resident.get(
+                "GarageNo",
+                ""
+            ),
+
+        "{{month}}":
+            record["Month"],
+
+        "{{year}}":
+            str(record["Year"]),
+
+        "{{amount}}":
+            str(record["AmountPaid"]),
+
+        "{{voucher_no}}":
+            record["VoucherNo"],
+
+        "{{payment_date}}":
+            record["PaymentDate"],
+
+        "{{generated_date}}":
+            pd.Timestamp.now().strftime(
+                "%d-%m-%Y"
+            )
+    }
+
+    for key, value in replacements.items():
+
+        html = html.replace(
+            key,
+            str(value)
+        )
+
+    return html
+
+def generate_receipt_pdf(html):
+
+    buffer = BytesIO()
+
+    HTML(
+        string=html
+    ).write_pdf(
+        target=buffer
+    )
+
+    buffer.seek(0)
+
+    return buffer
+	
 from reportlab.platypus import (
     SimpleDocTemplate,
     Table,
@@ -747,7 +849,40 @@ elif menu == "Maintenance":
             use_container_width=True,
             hide_index=True
         )
+		st.divider()
+		st.subheader(
+    	"📄 Download Receipts"
+		)
 
+		for _, row in df.iterrows():
+
+		    html_receipt = build_receipt_html(
+		        row
+		    )
+		
+		    pdf_buffer = generate_receipt_pdf(
+		        html_receipt
+		    )
+		
+		    st.download_button(
+		
+		        label=
+		        f"📄 Receipt - "
+		        f"{row['VoucherNo']}",
+		
+		        data=
+		        pdf_buffer.getvalue(),
+		
+		        file_name=
+		        f"{row['VoucherNo']}.pdf",
+		
+		        mime="application/pdf",
+		
+		        key=
+		        f"receipt_"
+		        f"{row['VoucherNo']}"
+		    )
+	
         total_collection = (
             pd.to_numeric(
                 df["AmountPaid"],
