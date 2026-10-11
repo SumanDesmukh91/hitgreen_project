@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Maintenance Receipt</title>
+
+<style>
+
+body{
+    font-family: Arial, Helvetica, sans-serif;
+    background:#f4f7fc;
+    margin:20px;
+    color:#333333;
+}
+
+.receipt-container{
+    max-width:900px;
+    margin:auto;
+    background:white;
+    border:2px solid #1e40af;
+    border-radius:12px;
+    padding:25px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.15);
+}
+
+.header{
+    text-align:center;
+    border-bottom:3px solid #1e40af;
+    padding-bottom:15px;
+    margin-bottom:15px;
+}
+
+.logo{
+    width:80px;
+    height:auto;
+}
+
+.society-name{
+    font-size:30px;
+    font-weight:bold;
+    color:#1e40af;
+}
+
+.receipt-title{
+    font-size:18px;
+    color:#555;
+    margin-top:6px;
+}
+
+.receipt-number{
+    text-align:right;
+    margin-top:10px;
+    font-size:16px;
+    font-weight:bold;
+    color:#1e40af;
+}
+
+.details{
+    margin-top:20px;
+}
+
+.details table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.details td{
+    padding:10px;
+}
+
+.label{
+    font-weight:bold;
+    color:#1e3a8a;
+}
+
+.payment-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+.payment-table th{
+    background:#1e40af;
+    color:white;
+    padding:12px;
+    border:1px solid #d1d5db;
+}
+
+.payment-table td{
+    padding:10px;
+    border:1px solid #d1d5db;
+}
+
+.payment-table tr:nth-child(even){
+    background:#f8fafc;
+}
+
+.total{
+    text-align:right;
+    margin-top:20px;
+    font-size:20px;
+    font-weight:bold;
+    color:#1e40af;
+}
+
+.footer{
+    margin-top:40px;
+    border-top:1px solid #d1d5db;
+    padding-top:20px;
+}
+
+.signature{
+    text-align:right;
+    margin-top:60px;
+}
+
+.signature-line{
+    width:220px;
+    border-top:1px solid #000;
+    margin-left:auto;
+    margin-bottom:8px;
+}
+
+.note{
+    margin-top:25px;
+    font-size:12px;
+    color:#666;
+    text-align:center;
+}
+
+.highlight{
+    color:#1e40af;
+    font-weight:bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="receipt-container">
+
+    <div class="header">
+
+        <!-- Uncomment when logo is available -->
+
+        <!--
+        <img src="{{logo_path}}" class="logo">
+        -->
+
+        <div class="society-name">
+            HIT GREEN HOUSING COMPLEX
+        </div>
+
+        <div class="receipt-title">
+            Maintenance Payment Receipt
+        </div>
+
+    </div>
+
+    <div class="receipt-number">
+        Receipt No : {{receipt_no}}
+    </div>
+
+    <div class="details">
+
+        <table>
+
+            <tr>
+                <td class="label">Flat Number</td>
+                <td>{{flat_no}}</td>
+
+                <td class="label">Payment Date</td>
+                <td>{{payment_date}}</td>
+            </tr>
+
+            <tr>
+                <td class="label">Owner Name</td>
+                <td>{{owner_name}}</td>
+
+                <td class="label">Voucher No</td>
+                <td>{{voucher_no}}</td>
+            </tr>
+
+            <tr>
+                <td class="label">Tenant Name</td>
+                <td>{{tenant_name}}</td>
+
+                <td class="label">Garage No</td>
+                <td>{{garage_no}}</td>
+            </tr>
+
+        </table>
+
+    </div>
+
+    <table class="payment-table">
+
+        <tr>
+            <th>Description</th>
+            <th>Month</th>
+            <th>Year</th>
+            <th>Amount (₹)</th>
+        </tr>
+
+        <tr>
+            <td>Monthly Maintenance Charges</td>
+            <td>{{month}}</td>
+            <td>{{year}}</td>
+            <td>{{amount}}</td>
+        </tr>
+
+    </table>
+
+    <div class="total">
+        Total Amount Received : ₹ {{amount}}
+    </div>
+
+    <div class="footer">
+
+        Received with thanks towards maintenance charges for the period mentioned above.
+
+        <br><br>
+
+        <span class="highlight">
+            Payment Status : PAID
+        </span>
+
+        <div class="signature">
+
+            <div class="signature-line"></div>
+
+            Authorized Signatory
+
+            <br>
+
+            HIT Green Housing Committee
+
+        </div>
+
+    </div>
+
+    <div class="note">
+
+        This is a system-generated receipt and does not require a physical signature.
+
+        <br>
+
+        Generated on {{generated_date}}
+
+    </div>
+
+</div>
+
+</body>
+</html>
