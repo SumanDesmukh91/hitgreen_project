@@ -146,7 +146,7 @@ def html_to_pdf(html_content):
     )
 
     pdf_buffer.seek(0)
-	return pdf_buffer
+    return pdf_buffer
 	
 from jinja2 import Template
 def render_receipt(record):
