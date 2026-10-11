@@ -151,24 +151,57 @@ def html_to_pdf(html_content):
     return pdf_buffer
 	
 from jinja2 import Template
+from jinja2 import Template
+
 def render_receipt(record):
+
+    residents = read_csv(RESIDENTS_FILE)
+
+    resident = next(
+        (
+            r
+            for r in residents
+            if r["FlatNo"] == record["FlatNo"]
+        ),
+        {}
+    )
+
+    owner_name = resident.get("OwnerName", "")
+    tenant_name = resident.get("TenantName", "")
+    garage_no = resident.get("GarageNo", "")
 
     with open(
         "templates/maintenance_receipt.html",
+        "r",
         encoding="utf-8"
     ) as f:
 
-        template = Template(
-            f.read()
-        )
+        template = Template(f.read())
 
     return template.render(
-        voucher_no=record["VoucherNo"],
+
         flat_no=record["FlatNo"],
+
+        owner_name=owner_name,
+
+        tenant_name=tenant_name,
+
+        garage_no=garage_no,
+
+        voucher_no=record["VoucherNo"],
+
         month=record["Month"],
+
         year=record["Year"],
+
         amount=record["AmountPaid"],
-        payment_date=record["PaymentDate"]
+
+        payment_date=record["PaymentDate"],
+
+        generated_date=pd.Timestamp.now().strftime(
+            "%d-%m-%Y"
+        )
+
     )
 	
 from reportlab.platypus import (
