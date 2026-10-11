@@ -849,22 +849,22 @@ elif menu == "Maintenance":
             use_container_width=True,
             hide_index=True
         )
-		st.divider()
-		st.subheader(
+
+        st.divider()
+        st.subheader(
     	"📄 Download Receipts"
 		)
 
-		for _, row in df.iterrows():
-
-		    html_receipt = build_receipt_html(
+        for _, row in df.iterrows():
+            html_receipt = build_receipt_html(
 		        row
-		    )
+                )
 		
-		    pdf_buffer = generate_receipt_pdf(
+            pdf_buffer = generate_receipt_pdf(
 		        html_receipt
 		    )
 		
-		    st.download_button(
+            st.download_button(
 		
 		        label=
 		        f"📄 Receipt - "
